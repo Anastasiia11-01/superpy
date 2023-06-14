@@ -66,10 +66,6 @@ if project_name not in project_path:
     project_path = os.path.join(os.getcwd(), project_name)
 
 folder_path = os.path.join(project_path, folder_name)
-buy_csv_path = os.path.join(folder_path, 'bought.csv')
-sell_csv_path = os.path.join(folder_path, 'sold.csv')
-
-
 
 
 #1
@@ -94,6 +90,7 @@ def create_csv_file(csv_name:str, headerlist:list):
                 writer.writerow(headerlist)
         else:
             return f'The file already exists.'
+    
 
 
 def bought_product_tulpe(product=BoughtProduct):
@@ -133,7 +130,8 @@ tomato = SoldProduct(tomato.buy_id,'Tomato', 2.0)
 potatos = SoldProduct(potatos.buy_id, 'Potatos', 0.75)
 juice = SoldProduct(juice.buy_id, 'Juice', 3.5)"""
 
-
+buy_csv_path = os.path.join(folder_path, 'bought.csv')
+sell_csv_path = os.path.join(folder_path, 'sold.csv')
 file1 = open(buy_csv_path, 'r') 
 csvreader1 = csv.reader(file1, delimiter='|')
 file2 = open(sell_csv_path, 'r') 
@@ -156,16 +154,42 @@ def add_csv_values(product):
             row = sold_product_tulpe(product)
             writer.writerow(row)
     else:
-        return f'no buy_price or sell_price attribute'            
-     
-  
-   
- 
-# PROGRAM FUNCTIONALITIES
+        return f'no buy_price or sell_price attribute'   
 
 default_date = date.today()
 
-#4 - to check if the product has been bought.
+
+#4 returns the date saved in csv file   
+  
+def read_date_csv():
+    if os.getcwd() != folder_path:
+        os.chdir(folder_path)
+    new_date = default_date.strftime('%Y-%m-%d')
+    csv_path = (os.path.join(folder_path, 'date.csv'))
+    if not os.path.isfile(csv_path):
+        with open (csv_path, 'w') as csv_name:
+                writer = csv.writer(csv_name)
+                writer.writerow([new_date]) 
+        date_read = open(csv_path, 'r') 
+        date_reader = csv.reader(date_read)
+        for date in date_reader:
+            for d in date:
+                return d    
+    else: 
+        date_read = open(csv_path, 'r') 
+        date_reader = csv.reader(date_read)
+        for date in date_reader:
+            for d in date:
+                return d
+        
+
+#print(read_date_csv())
+ 
+# PROGRAM FUNCTIONALITIES
+
+
+
+#5 - to check if the product has been bought.
 def buy(product_name, price, expiration_date):
     for row in csvreader1:
         if product_name == row[1] and price == row[3] and expiration_date == row[4]:
@@ -176,7 +200,7 @@ def buy(product_name, price, expiration_date):
             return f'Product bought has different expiration date: {row[4]}.'
        
  
-#5 - to check if product has been sold or expired, if not.       
+#6 - to check if product has been sold or expired, if not.       
 def sell(product_name, sell_price):
     for row in csvreader1:
         if product_name == row[1]:
@@ -193,11 +217,25 @@ def sell(product_name, sell_price):
                 elif row[0] == sell_row[1] and sell_price != sell_row[4]:
                     return f'Sold for different price: {sell_row[4]} EUR.' 
                 
-           
+
+#7 changes the date in csv file               
+def set_date(new_date):
+    with open((os.path.join(folder_path, 'date.csv')), 'w') as stream:
+        writer = csv.writer(stream)
+        new_date = [datetime.strptime(new_date, '%Y-%m-%d').date()]
+        writer.writerow(new_date)
+
+
                     
-#6 - to check if product will be expired in the given number of days    
-def advance_time(number_days):
-    required_date = default_date + timedelta(number_days)
+#8 - to check if product will be expired in the given number of days    
+def advance_time(input):
+    if type(input) == int:
+        csv_date = datetime.strptime(read_date_csv(), '%Y-%m-%d').date()
+        required_date = csv_date + timedelta(input)
+    elif len(input) == 10:
+        set_date(input)
+        required_date = datetime.strptime(read_date_csv(), '%Y-%m-%d').date()
+    
     expired_products = []      
     next(csvreader1)
     next(csvreader2)
@@ -209,10 +247,10 @@ def advance_time(number_days):
                 expired_products.append((row[0], row[1]))                     
     required_date_str = required_date.strftime('%d %b %Y')
     return f'Following products will be expired on {required_date_str}: {expired_products}.'
-
+#print(advance_time('2023-06-08'))
    
 
-#7 - to check what products are in stock on the given date.
+#9 - to check what products are in stock on the given date.
 def report_inventory(date:str):
     assert isinstance(date, str),\
     f'date should be string in format yyyy-mm-dd or enter "now" or "yesterday", got {type(date), date}'
@@ -253,10 +291,10 @@ def report_inventory(date:str):
     for data in inventory_list: 
         print(format_row.format("",*data))  
 
-print(report_inventory('now'))           
+#print(report_inventory('now'))           
                
 
-#8 - to check revenue on a specific date/month/year.    
+#10 - to check revenue on a specific date/month/year.    
 def report_revenue(date):
     assert isinstance(date, str),\
     f'date should be string in format yyyy-mm-dd/yyyy-mm/yyyy or enter "today" or "yesterday", got {type(date), date}'
@@ -285,7 +323,7 @@ def report_revenue(date):
     
 
 
-#9 - to check profit on a specific date/month/year.
+#11 - to check profit on a specific date/month/year.
 def report_profit(date):
     assert isinstance(date, str),\
     f'date should be string in format yyyy-mm-dd/yyyy-mm/yyyy or enter "today" or "yesterday", got {type(date), date}'
@@ -318,15 +356,13 @@ def report_profit(date):
             item_price = row[4]
             item_price = float(item_price)
             prices.append(item_price)
-    revenue = sum(prices)
-    
-    profit = revenue - spent 
-    
+    revenue = sum(prices)    
+    profit = revenue - spent     
     return f'{date}: profit was {profit} EUR.'   
 
 
 
-#10 - to export csv data into excel sheet, which will be created automatically.
+#12 - to export csv data into excel sheet, which will be created automatically.
 def csv_to_excel(csv_filename:str, excel_filename:str):   
     if os.getcwd() != folder_path:
         os.chdir(folder_path)  
@@ -341,9 +377,8 @@ def csv_to_excel(csv_filename:str, excel_filename:str):
 
 
 
-#11 - to display pie-chart.
-def spent_vs_profit(date):
-    
+#13 - to display pie-chart.
+def spent_vs_profit(date):    
     if date == 'today':
         date = default_date
         date = date.strftime('%Y-%m-%d')
@@ -393,7 +428,6 @@ def spent_vs_profit(date):
    
 file1.close()
 file2.close()
-   
 
 
 
