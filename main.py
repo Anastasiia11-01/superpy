@@ -6,6 +6,8 @@ import os
 import itertools
 from collections import Counter
 import pandas as pd
+import sys
+from uuid import uuid4
 
 
 
@@ -80,16 +82,25 @@ def create_folder(folder_name:str):
 
 
 #2
-def create_csv_file(csv_name:str, headerlist:list):    
+def create_csv_file(csv_name):    
     if os.getcwd() != folder_path:
         os.chdir(folder_path)  
         csv_path = os.path.join(folder_path, csv_name)
         if not os.path.isfile(csv_path):    
             with open (csv_path, 'w', newline='') as csv_name:
-                writer = csv.writer(csv_name, delimiter = '|')
-                writer.writerow(headerlist)
+                if 'bought' in csv_path:
+                    writer = csv.writer(csv_name, delimiter = '|')
+                    writer.writerow(['buy_id',' product_name',' buy_date',' buy_price',' expiration_date'])
+                elif 'sold' in csv_path:
+                    writer = csv.writer(csv_name, delimiter = '|')
+                    writer.writerow(['sell_id', 'buy_id', 'product_name', ' sell_date',' sell_price'])
+                else:
+                    return f'Enter correct file name: sold.csv or bought.csv.'
+
         else:
             return f'The file already exists.'
+        
+#print(create_csv_file('bought.csv'))
     
 
 
@@ -101,7 +112,7 @@ def sold_product_tulpe(product=SoldProduct):
 
 
 
-"""Example products:
+"""#Example products:
 orange = BoughtProduct('Orange', 2.34, '2023-4-25')
 banana = BoughtProduct('Banana', 1.5, '2023-5-6')
 milk = BoughtProduct('Milk', 2, '2023-2-25')
@@ -116,11 +127,11 @@ onion = BoughtProduct('Onion', 1.0, '2024-4-25')
 ketchup = BoughtProduct('Ketchup', 1.3, '2027-1-13')
 x = BoughtProduct('X', 1.5, '2026-2-3')
 apple = BoughtProduct('Apple', 0.3, '2023-05-10')
-juice = BoughtProduct('Juice', 1.5, '2026-12-04')
+juice = BoughtProduct('Juice', 1.5, '2026-12-04')"""
 
 
 
-orange = SoldProduct(orange.buy_id,'Orange', 3.00)
+"""orange = SoldProduct(orange.buy_id,'Orange', 3.00)
 banana = SoldProduct(banana.buy_id,'Banana', 2.0)
 milk = SoldProduct(milk.buy_id,'Milk', 3.0)
 cherry = SoldProduct(cherry.buy_id,'Cherry', 2.0)
@@ -132,13 +143,39 @@ juice = SoldProduct(juice.buy_id, 'Juice', 3.5)"""
 
 buy_csv_path = os.path.join(folder_path, 'bought.csv')
 sell_csv_path = os.path.join(folder_path, 'sold.csv')
-file1 = open(buy_csv_path, 'r') 
-csvreader1 = csv.reader(file1, delimiter='|')
-file2 = open(sell_csv_path, 'r') 
-csvreader2 = csv.reader(file2, delimiter='|')
+if os.path.isfile(buy_csv_path):
+    file1 = open(buy_csv_path, 'r') 
+    csvreader1 = csv.reader(file1, delimiter='|')
+    
+if os.path.isfile(sell_csv_path):
+    file2 = open(sell_csv_path, 'r') 
+    csvreader2 = csv.reader(file2, delimiter='|')
 
-#3
-def add_csv_values(product):
+#3 -> to be used from command line
+def add_csv_values(name):
+    name=sys.argv[3]
+    price=sys.argv[5]
+    value=sys.argv[7]
+    if os.getcwd() != folder_path:
+        os.chdir(folder_path)
+        
+    if 'buy' in sys.argv[4]:
+        name = BoughtProduct(sys.argv[3], price, value)
+        csv_path = os.path.join(folder_path, 'bought.csv')
+        with open(csv_path, 'a', newline='') as stream:
+            writer = csv.writer(stream, delimiter = '|')
+            row = bought_product_tulpe(name)
+            writer.writerow(row)
+    elif 'sell' in sys.argv[4]:
+        name = SoldProduct(value, sys.argv[3], price)
+        csv_path = os.path.join(folder_path, 'sold.csv')
+        with open(csv_path, 'a', newline='') as stream:
+            writer = csv.writer(stream, delimiter = '|')
+            row = sold_product_tulpe(name)
+            writer.writerow(row)
+
+#-> to be used on back end
+def add_csv_values_internal(product):
     if os.getcwd() != folder_path:
         os.chdir(folder_path)
     if hasattr(product, 'buy_price'):
@@ -154,7 +191,9 @@ def add_csv_values(product):
             row = sold_product_tulpe(product)
             writer.writerow(row)
     else:
-        return f'no buy_price or sell_price attribute'   
+        return f'no buy_price or sell_price attribute'
+     
+#print(add_csv_values_internal(apple))
 
 default_date = date.today()
 
@@ -224,9 +263,10 @@ def set_date(new_date):
         writer = csv.writer(stream)
         new_date = [datetime.strptime(new_date, '%Y-%m-%d').date()]
         writer.writerow(new_date)
+   
 
 
-                    
+                 
 #8 - to check if product will be expired in the given number of days    
 def advance_time(input):
     if type(input) == int:
@@ -238,7 +278,7 @@ def advance_time(input):
     
     expired_products = []      
     next(csvreader1)
-    next(csvreader2)
+    
     for row in csvreader1:
         date_str = row[4]
         exp_date = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -246,7 +286,7 @@ def advance_time(input):
             if (row[0], row[1]) not in expired_products:                
                 expired_products.append((row[0], row[1]))                     
     required_date_str = required_date.strftime('%d %b %Y')
-    return f'Following products will be expired on {required_date_str}: {expired_products}.'
+    return f'Following products expired on {required_date_str}: {expired_products}.'
 #print(advance_time('2023-06-08'))
    
 
@@ -264,9 +304,8 @@ def report_inventory(date:str):
     
     inventory_list = []
     
-    next(csvreader2) 
     next(csvreader1) 
-        
+            
     counts = Counter(map(tuple,csvreader1))
     for k, v in counts.items():
         if k[2] <= date.strftime('%Y-%m-%d'):
@@ -277,7 +316,7 @@ def report_inventory(date:str):
             exp_date = k[4]                     
             data = [id, product, number_products, price, exp_date]
             inventory_list.append(data)  
-    
+    next(csvreader2)
     for row in csvreader2:
         for item in inventory_list:
             if item[0] in row[1] and row[3] <= date.strftime('%Y-%m-%d'):
@@ -358,7 +397,7 @@ def report_profit(date):
             prices.append(item_price)
     revenue = sum(prices)    
     profit = revenue - spent     
-    return f'{date}: profit was {profit} EUR.'   
+    return f'{date}: profit was {round(profit,2)} EUR.'   
 
 
 
@@ -378,7 +417,7 @@ def csv_to_excel(csv_filename:str, excel_filename:str):
 
 
 #13 - to display pie-chart.
-def spent_vs_profit(date):    
+def spent_vs_revenue(date):    
     if date == 'today':
         date = default_date
         date = date.strftime('%Y-%m-%d')
@@ -407,14 +446,14 @@ def spent_vs_profit(date):
             item_price = float(item_price)
             prices.append(item_price)
     revenue = sum(prices)
-    profit = revenue - spent
+    #profit = revenue - spent
 
     import matplotlib.pyplot as plt
     import numpy as np
 
     plt.style.use('_mpl-gallery-nogrid')
     # make data
-    x = [spent, profit]
+    x = [spent, revenue]
     colors = ['red','blue']
     # plot
     fig, ax = plt.subplots()
@@ -422,12 +461,16 @@ def spent_vs_profit(date):
         wedgeprops={"linewidth": 1, "edgecolor": "white"}, frame=True)
     ax.set(xlim=(0, 8), xticks=np.arange(1, 8),
         ylim=(0, 8), yticks=np.arange(1, 8))
-    print(f'This is chart "spent(red) vs. profit(blue)" for {date}.')
+    print(f'This is chart "spent(red) vs. revenue(blue)" for {date}.')
     plt.show()
     
    
-file1.close()
-file2.close()
+
+
+
+
+
+
 
 
 
