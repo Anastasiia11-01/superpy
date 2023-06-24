@@ -24,13 +24,14 @@ create_csv_file_parser = subparsers.add_parser('create_csv_file')
 create_csv_file_parser.add_argument('--file',nargs=1,choices=['bought.csv', 'sold.csv'],default='bought.csv',help='enter file name as csv',**arg_template)
 create_csv_file_parser.set_defaults(func=main.create_csv_file)
 
-#3
+"""#3 -> not advisable for the use
 add_csv_values_parser = subparsers.add_parser('add_csv_values')
 add_csv_values_parser.add_argument('--name',nargs=1,type=str, help='specify product name, which was bought/sold',**arg_template)
 add_csv_values_parser.add_argument('--buy_price',nargs=1,type=float, help='specify bought price',**arg_template)
 add_csv_values_parser.add_argument('--sell_price',nargs=1,type=float, help='specify sold price',**arg_template)
 add_csv_values_parser.add_argument('--value',nargs=1, help='specify expiration date as yyyy-mm-dd if for bought product or bought-id if for sold product',**arg_template)
-add_csv_values_parser.set_defaults(func=main.add_csv_values)
+add_csv_values_parser.set_defaults(func=main.add_csv_values)"""
+
 #The previous 3 parsers are not meant to be used in general, but are here in case user needs the program for files creation also.
 
 #4 
