@@ -112,35 +112,6 @@ def sold_product_tulpe(product=SoldProduct):
 
 
 
-"""#Example products:
-orange = BoughtProduct('Orange', 2.34, '2023-4-25')
-banana = BoughtProduct('Banana', 1.5, '2023-5-6')
-milk = BoughtProduct('Milk', 2, '2023-2-25')
-cherry = BoughtProduct('Cherry', 2, '2023-2-25')
-bread = BoughtProduct('Bread', 0.8, '2023-04-13')
-salt = BoughtProduct('Salt', 0.2, '2025-11-8')
-choco = BoughtProduct('Chocolatte', 3.0, '2024-2-11')
-potatos = BoughtProduct('Potatos', 0.45, '2023-7-25')
-tomato = BoughtProduct('Tomatos', 1.25, '2023-4-20')
-cream = BoughtProduct('Cream', 5.0, '2026-4-25')
-onion = BoughtProduct('Onion', 1.0, '2024-4-25')
-ketchup = BoughtProduct('Ketchup', 1.3, '2027-1-13')
-x = BoughtProduct('X', 1.5, '2026-2-3')
-apple = BoughtProduct('Apple', 0.3, '2023-05-10')
-juice = BoughtProduct('Juice', 1.5, '2026-12-04')"""
-
-
-
-"""orange = SoldProduct(orange.buy_id,'Orange', 3.00)
-banana = SoldProduct(banana.buy_id,'Banana', 2.0)
-milk = SoldProduct(milk.buy_id,'Milk', 3.0)
-cherry = SoldProduct(cherry.buy_id,'Cherry', 2.0)
-bread = SoldProduct( bread.buy_id,'Bread', 1.5)
-salt = SoldProduct(salt.buy_id, 'Salt', 0.5)
-tomato = SoldProduct(tomato.buy_id,'Tomato', 2.0)
-potatos = SoldProduct(potatos.buy_id, 'Potatos', 0.75)
-juice = SoldProduct(juice.buy_id, 'Juice', 3.5)"""
-
 buy_csv_path = os.path.join(folder_path, 'bought.csv')
 sell_csv_path = os.path.join(folder_path, 'sold.csv')
 if os.path.isfile(buy_csv_path):
@@ -151,7 +122,7 @@ if os.path.isfile(sell_csv_path):
     file2 = open(sell_csv_path, 'r') 
     csvreader2 = csv.reader(file2, delimiter='|')
 
-#3 -> to be used from command line
+"""#3 -> to be used from command line -> not advisable
 def add_csv_values(name):
     name=sys.argv[3]
     price=sys.argv[5]
@@ -172,9 +143,9 @@ def add_csv_values(name):
         with open(csv_path, 'a', newline='') as stream:
             writer = csv.writer(stream, delimiter = '|')
             row = sold_product_tulpe(name)
-            writer.writerow(row)
+            writer.writerow(row)"""
 
-#-> to be used on back end
+#3-> to be used on back end
 def add_csv_values_internal(product):
     if os.getcwd() != folder_path:
         os.chdir(folder_path)
@@ -192,8 +163,39 @@ def add_csv_values_internal(product):
             writer.writerow(row)
     else:
         return f'no buy_price or sell_price attribute'
+    
+
+#Example products:
+"""orange = BoughtProduct('Orange', 2.34, '2023-4-25')
+banana = BoughtProduct('Banana', 1.5, '2023-5-6')
+milk = BoughtProduct('Milk', 2, '2023-2-25')
+cherry = BoughtProduct('Cherry', 2, '2023-2-25')
+bread = BoughtProduct('Bread', 0.8, '2023-04-13')
+salt = BoughtProduct('Salt', 0.2, '2025-11-8')
+choco = BoughtProduct('Chocolatte', 3.0, '2024-2-11')
+potatos = BoughtProduct('Potatos', 0.45, '2023-7-25')
+tomato = BoughtProduct('Tomatos', 1.25, '2023-4-20')
+cream = BoughtProduct('Cream', 5.0, '2026-4-25')
+onion = BoughtProduct('Onion', 1.0, '2024-4-25')
+ketchup = BoughtProduct('Ketchup', 1.3, '2027-1-13')
+x = BoughtProduct('X', 1.5, '2026-2-3')
+apple = BoughtProduct('Apple', 0.3, '2023-05-10')
+juice = BoughtProduct('Juice', 1.5, '2026-12-04')"""
+
+
+
+
+"""orange = SoldProduct(orange.buy_id,'Orange', 3.00)
+banana = SoldProduct(banana.buy_id,'Banana', 2.0)
+milk = SoldProduct(milk.buy_id,'Milk', 3.0)
+cherry = SoldProduct(cherry.buy_id,'Cherry', 2.0)
+bread = SoldProduct( bread.buy_id,'Bread', 1.5)
+salt = SoldProduct(salt.buy_id, 'Salt', 0.5)
+tomato = SoldProduct(tomato.buy_id,'Tomato', 2.0)
+potatos = SoldProduct(potatos.buy_id, 'Potatos', 0.75)
+juice = SoldProduct(juice.buy_id, 'Juice', 3.5)"""
      
-#print(add_csv_values_internal(apple))
+#print(add_csv_values_internal(cherry))
 
 default_date = date.today()
 
@@ -464,6 +466,17 @@ def spent_vs_revenue(date):
     print(f'This is chart "spent(red) vs. revenue(blue)" for {date}.')
     plt.show()
     
+   
+
+
+
+
+
+
+
+
+
+
    
 
 
