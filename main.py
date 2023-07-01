@@ -122,7 +122,7 @@ if os.path.isfile(sell_csv_path):
     file2 = open(sell_csv_path, 'r') 
     csvreader2 = csv.reader(file2, delimiter='|')
 
-"""#3 -> to be used from command line -> not advisable
+#3 -> to be used from command line -> not advisable
 def add_csv_values(name):
     name=sys.argv[3]
     price=sys.argv[5]
@@ -131,20 +131,54 @@ def add_csv_values(name):
         os.chdir(folder_path)
         
     if 'buy' in sys.argv[4]:
-        name = BoughtProduct(sys.argv[3], price, value)
+        name = BoughtProduct(name, price, value)
+        lst = []
+        
         csv_path = os.path.join(folder_path, 'bought.csv')
-        with open(csv_path, 'a', newline='') as stream:
-            writer = csv.writer(stream, delimiter = '|')
-            row = bought_product_tulpe(name)
-            writer.writerow(row)
-    elif 'sell' in sys.argv[4]:
-        name = SoldProduct(value, sys.argv[3], price)
-        csv_path = os.path.join(folder_path, 'sold.csv')
-        with open(csv_path, 'a', newline='') as stream:
-            writer = csv.writer(stream, delimiter = '|')
-            row = sold_product_tulpe(name)
-            writer.writerow(row)"""
+        next(csvreader1)
+        for row in csvreader1:
+            id = row [0]      
+            lst.append(int(id))
+            
+            product = row[1]
+            price = row[3]
+            exp_d = row[4]
+            if name.product_name == product.lower() and name.expiration_date == exp_d:
+                name.buy_id = id
+            elif name.product_name == product.lower() and name.expiration_date != exp_d or name.product_name != product.lower():
+                name.buy_id = max(lst) + 1               
 
+        with open(csv_path, 'a', newline='') as stream:
+            writer = csv.writer(stream, delimiter = '|')
+            line = bought_product_tulpe(name)
+            writer.writerow(line)
+            return f'Product added to bought.csv file with buy_d {name.buy_id}.'
+
+    elif 'sell' in sys.argv[4] :
+        next(csvreader1)
+        for row in csvreader1:
+            buy_id = row[0]   
+            bought_product = row[1]
+            if buy_id == value and bought_product.lower() == sys.argv[3]:
+                               
+                name = SoldProduct(value, sys.argv[3], price)
+                csv_path = os.path.join(folder_path, 'sold.csv')
+                lst = []
+                
+                next(csvreader2)
+                for row in csvreader2:
+                    id = row [0]      
+                    lst.append(int(id))
+                    name.sell_id = max(lst) + 1
+
+                with open(csv_path, 'a', newline='') as stream:
+                    writer = csv.writer(stream, delimiter = '|')
+                    line = sold_product_tulpe(name)
+                    writer.writerow(line)
+                    return f'Product added to sold.csv file with sell_id {name.sell_id}.'
+            
+            
+#print(add_csv_values('orange'))
 #3-> to be used on back end
 def add_csv_values_internal(product):
     if os.getcwd() != folder_path:
@@ -202,7 +236,7 @@ default_date = date.today()
 
 #4 returns the date saved in csv file   
   
-def read_date_csv():
+def read_date_csv(date:str):
     if os.getcwd() != folder_path:
         os.chdir(folder_path)
     new_date = default_date.strftime('%Y-%m-%d')
@@ -222,9 +256,10 @@ def read_date_csv():
         for date in date_reader:
             for d in date:
                 return d
+                
         
 
-#print(read_date_csv())
+#print(read_date_csv('x'))
  
 # PROGRAM FUNCTIONALITIES
 
@@ -266,30 +301,39 @@ def set_date(new_date):
         new_date = [datetime.strptime(new_date, '%Y-%m-%d').date()]
         writer.writerow(new_date)
    
-
+#print(set_date('2023-04-05'))
 
                  
 #8 - to check if product will be expired in the given number of days    
 def advance_time(input):
-    if type(input) == int:
-        csv_date = datetime.strptime(read_date_csv(), '%Y-%m-%d').date()
-        required_date = csv_date + timedelta(input)
-    elif len(input) == 10:
-        set_date(input)
-        required_date = datetime.strptime(read_date_csv(), '%Y-%m-%d').date()
+    try:
+        if type(input) == int:
+            csv_date = read_date_csv('x')
+            if type(csv_date) == str:
+                csv_date = datetime.strptime(csv_date, '%Y-%m-%d').date()            
+                required_date = csv_date + timedelta(input)
+            else:
+                required_date = default_date + timedelta(input)       
+        elif len(input) == 10:       
+            required_date = datetime.strptime(input, '%Y-%m-%d').date()
+            
+
+        set_date(required_date.strftime('%Y-%m-%d'))
+        expired_products = []      
+        next(csvreader1)
+        
+        for row in csvreader1:
+            date_str = row[4]
+            exp_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            if exp_date < required_date and isinstance(required_date, date):            
+                if (row[0], row[1]) not in expired_products:                
+                    expired_products.append((row[0], row[1]))                     
+        required_date_str = required_date.strftime('%d %b %Y')
+        return f'Following products expired on {required_date_str}: {expired_products}.'
+    except ValueError:
+            return f'Enter a valid date'
     
-    expired_products = []      
-    next(csvreader1)
-    
-    for row in csvreader1:
-        date_str = row[4]
-        exp_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        if exp_date < required_date:            
-            if (row[0], row[1]) not in expired_products:                
-                expired_products.append((row[0], row[1]))                     
-    required_date_str = required_date.strftime('%d %b %Y')
-    return f'Following products expired on {required_date_str}: {expired_products}.'
-#print(advance_time('2023-06-08'))
+#print(advance_time(9))
    
 
 #9 - to check what products are in stock on the given date.
@@ -301,38 +345,43 @@ def report_inventory(date:str):
     elif date == 'yesterday':
         date = default_date - timedelta(1)
     else:
-        date = datetime.strptime(date, '%Y-%m-%d').date()
+        try:
+            date = datetime.strptime(date, '%Y-%m-%d').date()
+        except ValueError:
+            return f'Enter a valid date.'
     
-    
-    inventory_list = []
-    
-    next(csvreader1) 
-            
-    counts = Counter(map(tuple,csvreader1))
-    for k, v in counts.items():
-        if k[2] <= date.strftime('%Y-%m-%d'):
-            number_products = v
-            id = k[0]
-            product = k[1]
-            price = k[3]
-            exp_date = k[4]                     
-            data = [id, product, number_products, price, exp_date]
-            inventory_list.append(data)  
-    next(csvreader2)
-    for row in csvreader2:
-        for item in inventory_list:
-            if item[0] in row[1] and row[3] <= date.strftime('%Y-%m-%d'):
-                inventory_list.remove(item)
-                            
+    if date <= default_date:
+        inventory_list = []
         
-    header = ['Id', 'Product', 'Count', 'Price', 'Expiry date']
-    format_row = "{:>15}" * (len(header) + 1)
-    print(f'Inventory on {date}:')
-    print(format_row.format("", *header)) 
-    for data in inventory_list: 
-        print(format_row.format("",*data))  
+        next(csvreader1) 
+                
+        counts = Counter(map(tuple,csvreader1))
+        for k, v in counts.items():
+            if k[2] <= date.strftime('%Y-%m-%d'):
+                number_products = v
+                id = k[0]
+                product = k[1]
+                price = k[3]
+                exp_date = k[4]                     
+                data = [id, product, number_products, price, exp_date]
+                inventory_list.append(data)  
+        next(csvreader2)
+        for row in csvreader2:
+            for item in inventory_list:
+                if item[0] in row[1] and row[3] <= date.strftime('%Y-%m-%d'):
+                    inventory_list.remove(item)
+                                
+            
+        header = ['Id', 'Product', 'Count', 'Price', 'Expiry date']
+        format_row = "{:>15}" * (len(header) + 1)
+        print(f'Inventory on {date}:')
+        print(format_row.format("", *header)) 
+        for data in inventory_list: 
+            print(format_row.format("",*data))  
+    else:
+        return f'Date should not be in the future'
 
-#print(report_inventory('now'))           
+#print(report_inventory('2023-09-09'))           
                
 
 #10 - to check revenue on a specific date/month/year.    
@@ -345,24 +394,53 @@ def report_revenue(date):
     elif date == 'yesterday':
         date = default_date - timedelta(1)
         date = date.strftime('%Y-%m-%d')
-    elif date == '%Y-%m-%d':
-        date = datetime.strptime(date, '%Y-%m-%d').date()
-    elif date == '%Y-%m':
-        date = datetime.strptime(date, '%Y-%m').date()
-    elif date == '%Y':
-        date = datetime.strptime(date, '%Y').date()
+    else: 
+        if len(date) == 10:
+            
+            try:
+                datetime.strptime(date,'%Y-%m-%d').date()
 
-    next(csvreader2)
-    prices = []
-    for row in csvreader2:       
-        if date in row[3]:
-            item_price = row[4]
-            item_price = float(item_price)
-            prices.append(item_price)
-    revenue = sum(prices)       
-    return f'{date}: revenue was {revenue} EUR.'
+            except ValueError:
+                return f'Enter a valid date.'
+        elif len(date) == 7:
+            
+            try:
+                datetime.strptime(date,'%Y-%m').date()
+
+            except ValueError:
+                return f'Enter a valid month.'
+        elif len(date) == 4:
+            
+            try:
+                datetime.strptime(date,'%Y').date()
+
+            except ValueError:
+                return f'Enter a valid year.'
+        else:
+            return f'Enter a valid date.'
+        
+
+   
+    if date <= default_date.strftime('%Y-%m-%d') or date < default_date.strftime('%Y-%m') or date < default_date.strftime('%Y'):
+        
+
+        next(csvreader2)
+        prices = []
+        for row in csvreader2:       
+            if date in row[3]:
+                item_price = row[4]
+                item_price = float(item_price)
+                prices.append(item_price)
+        revenue = sum(prices)       
+        return f'{date}: revenue was {revenue} EUR.'
+        
+            
+    else:
+        return f'Date should not be in the future.'
     
-
+   
+    
+#print(report_revenue('19999-12-31'))
 
 #11 - to check profit on a specific date/month/year.
 def report_profit(date):
@@ -374,33 +452,58 @@ def report_profit(date):
     elif date == 'yesterday':
         date = default_date - timedelta(1)
         date = date.strftime('%Y-%m-%d')
-    elif date == '%Y-%m-%d':
-        date = datetime.strptime(date, '%Y-%m-%d').date()
-    elif date == '%Y-%m':
-        date = datetime.strptime(date, '%Y-%m').date()
-    elif date == '%Y':
-        date = datetime.strptime(date, '%Y').date()
+    else: 
+        if len(date) == 10:
+            
+            try:
+                datetime.strptime(date,'%Y-%m-%d').date()
 
-    next(csvreader1)
-    costs = []
-    for row in csvreader1:       
-        if date in row[2]:
-            item_cost = row[3]
-            item_cost= float(item_cost)
-            costs.append(item_cost)
-    spent = sum(costs) 
+            except ValueError:
+                return f'Enter a valid date.'
+        elif len(date) == 7:
+            
+            try:
+                datetime.strptime(date,'%Y-%m').date()
+
+            except ValueError:
+                return f'Enter a valid month.'
+        elif len(date) == 4:
+            
+            try:
+                datetime.strptime(date,'%Y').date()
+
+            except ValueError:
+                return f'Enter a valid year.'
+        else:
+            return f'Enter a valid date.'
+        
+
    
-    next(csvreader2)
-    prices = []
-    for row in csvreader2:       
-        if date in row[3]:
-            item_price = row[4]
-            item_price = float(item_price)
-            prices.append(item_price)
-    revenue = sum(prices)    
-    profit = revenue - spent     
-    return f'{date}: profit was {round(profit,2)} EUR.'   
+    if date <= default_date.strftime('%Y-%m-%d') or date < default_date.strftime('%Y-%m') or date < default_date.strftime('%Y'):
+        
 
+        next(csvreader1)
+        costs = []
+        for row in csvreader1:       
+            if date in row[2]:
+                item_cost = row[3]
+                item_cost= float(item_cost)
+                costs.append(item_cost)
+        spent = sum(costs) 
+    
+        next(csvreader2)
+        prices = []
+        for row in csvreader2:       
+            if date in row[3]:
+                item_price = row[4]
+                item_price = float(item_price)
+                prices.append(item_price)
+        revenue = sum(prices)    
+        profit = revenue - spent     
+        return f'{date}: profit was {round(profit,2)} EUR.' 
+    else:
+        return f'Date should not be in the future.'  
+#print(report_profit('2023-14-30'))
 
 
 #12 - to export csv data into excel sheet, which will be created automatically.
@@ -426,57 +529,78 @@ def spent_vs_revenue(date):
     elif date == 'yesterday':
         date = default_date - timedelta(1)
         date = date.strftime('%Y-%m-%d')
-    elif date == '%Y-%m-%d':
-        date = datetime.strptime(date, '%Y-%m-%d').date()
-    elif date == '%Y-%m':
-        date = datetime.strptime(date, '%Y-%m').date()
-    elif date == '%Y':
-        date = datetime.strptime(date, '%Y').date()      
-    next(csvreader1)
-    costs = []
-    for row in csvreader1:       
-        if date in row[2]:
-            item_cost = row[3]
-            item_cost= float(item_cost)
-            costs.append(item_cost)
-    spent = sum(costs)
-    next(csvreader2)
-    prices = []
-    for row in csvreader2:       
-        if date in row[3]:
-            item_price = row[4]
-            item_price = float(item_price)
-            prices.append(item_price)
-    revenue = sum(prices)
-    #profit = revenue - spent
+    else: 
+        if len(date) == 10:
+            
+            try:
+                datetime.strptime(date,'%Y-%m-%d').date()
 
-    import matplotlib.pyplot as plt
-    import numpy as np
+            except ValueError:
+                return f'Enter a valid date.'
+        elif len(date) == 7:
+            
+            try:
+                datetime.strptime(date,'%Y-%m').date()
 
-    plt.style.use('_mpl-gallery-nogrid')
-    # make data
-    x = [spent, revenue]
-    colors = ['red','blue']
-    # plot
-    fig, ax = plt.subplots()
-    ax.pie(x, colors=colors, radius=3, center=(4, 4),
-        wedgeprops={"linewidth": 1, "edgecolor": "white"}, frame=True)
-    ax.set(xlim=(0, 8), xticks=np.arange(1, 8),
-        ylim=(0, 8), yticks=np.arange(1, 8))
-    print(f'This is chart "spent(red) vs. revenue(blue)" for {date}.')
-    plt.show()
-    
+            except ValueError:
+                return f'Enter a valid month.'
+        elif len(date) == 4:
+            
+            try:
+                datetime.strptime(date,'%Y').date()
+
+            except ValueError:
+                return f'Enter a valid year.'
+        else:
+            return f'Enter a valid date.'
+        
+
    
+    if date <= default_date.strftime('%Y-%m-%d') or date < default_date.strftime('%Y-%m') or date < default_date.strftime('%Y'):
+              
+        next(csvreader1)
+        costs = []
+        for row in csvreader1:       
+            if date in row[2]:
+                item_cost = row[3]
+                item_cost= float(item_cost)
+                costs.append(item_cost)
+            else:
+                return f'no items bought on this date'
+        spent = sum(costs)
+        next(csvreader2)
+        prices = []
+        for row in csvreader2:       
+            if date in row[3]:
+                item_price = row[4]
+                item_price = float(item_price)
+                prices.append(item_price)
+            else:
+                return f'no items sold on this date'
+        revenue = sum(prices)
+        
 
+        import matplotlib.pyplot as plt
+        import numpy as np
 
-
-
-
-
-
-
-
-
+        plt.style.use('_mpl-gallery-nogrid')
+        # make data
+        x = [spent, revenue]
+        colors = ['red','blue']
+        # plot
+        fig, ax = plt.subplots()
+        ax.pie(x, colors=colors, radius=3, center=(4, 4),
+            wedgeprops={"linewidth": 1, "edgecolor": "white"}, frame=True)
+        ax.set(xlim=(0, 8), xticks=np.arange(1, 8),
+            ylim=(0, 8), yticks=np.arange(1, 8))
+        
+        print(f'This is chart "spent(red) vs. revenue(blue)" for {date}.')
+        plt.show()
+    else:
+        return f'Date should not be in the future.'
+    
+#print(spent_vs_revenue("2023"))
+    
    
 
 
