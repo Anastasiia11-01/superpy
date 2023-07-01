@@ -24,13 +24,13 @@ create_csv_file_parser = subparsers.add_parser('create_csv_file')
 create_csv_file_parser.add_argument('--file',nargs=1,choices=['bought.csv', 'sold.csv'],default='bought.csv',help='enter file name as csv',**arg_template)
 create_csv_file_parser.set_defaults(func=main.create_csv_file)
 
-"""#3 -> not advisable for the use
+#3 -> not advisable for the use
 add_csv_values_parser = subparsers.add_parser('add_csv_values')
 add_csv_values_parser.add_argument('--name',nargs=1,type=str, help='specify product name, which was bought/sold',**arg_template)
 add_csv_values_parser.add_argument('--buy_price',nargs=1,type=float, help='specify bought price',**arg_template)
 add_csv_values_parser.add_argument('--sell_price',nargs=1,type=float, help='specify sold price',**arg_template)
 add_csv_values_parser.add_argument('--value',nargs=1, help='specify expiration date as yyyy-mm-dd if for bought product or bought-id if for sold product',**arg_template)
-add_csv_values_parser.set_defaults(func=main.add_csv_values)"""
+add_csv_values_parser.set_defaults(func=main.add_csv_values)
 
 #The previous 3 parsers are not meant to be used in general, but are here in case user needs the program for files creation also.
 
@@ -63,13 +63,13 @@ advance_time_parser.set_defaults(func=main.advance_time)
 
 #9
 report_inventory_parser = subparsers.add_parser('report_inventory')
-report_inventory_parser.add_argument('--inventory',nargs=1, type=str, default = 'now', help="enter date in format yyyy-mm-dd or enter 'now' or 'yesterday'", **arg_template)
+report_inventory_parser.add_argument('-in','--inventory',nargs=1, type=str, default = 'now', help="enter date in format yyyy-mm-dd or enter 'now' or 'yesterday'", **arg_template)
 report_inventory_parser.set_defaults(func=main.report_inventory)
 
 
 #10
 report_revenue_parser = subparsers.add_parser('report_revenue')
-report_revenue_parser.add_argument('--revenue',nargs=1,type=str, default = 'today',help="enter date in format yyyy-mm-dd/yyyy-mm/yyyy or enter 'today' or 'yesterday'", **arg_template)
+report_revenue_parser.add_argument('-rev','--revenue',nargs=1,type=str, default = 'today',help="enter date in format yyyy-mm-dd/yyyy-mm/yyyy or enter 'today' or 'yesterday'", **arg_template)
 report_revenue_parser.set_defaults(func=main.report_revenue)
 
 #11
@@ -83,8 +83,8 @@ csv_to_excel_parser.add_argument('--file',nargs=2,type=str, help="enter name of 
 csv_to_excel_parser.set_defaults(func=main.csv_to_excel)
 
 #13
-spent_vs_revenue_parser = subparsers.add_parser('spent_vs_revenue')
-spent_vs_revenue_parser.add_argument('--spent_revenue',nargs=1,default = 'today', help="enter date in format yyyy-mm-dd/yyyy-mm/yyyy or enter 'today' or 'yesterday'", **arg_template)
+spent_vs_revenue_parser = subparsers.add_parser('spent_revenue')
+spent_vs_revenue_parser.add_argument('--sprev',nargs=1,default = 'today', help="enter date in format yyyy-mm-dd/yyyy-mm/yyyy or enter 'today' or 'yesterday'", **arg_template)
 spent_vs_revenue_parser.set_defaults(func=main.spent_vs_revenue)
 
 
