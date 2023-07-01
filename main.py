@@ -122,7 +122,7 @@ if os.path.isfile(sell_csv_path):
     file2 = open(sell_csv_path, 'r') 
     csvreader2 = csv.reader(file2, delimiter='|')
 
-#3 -> to be used from command line -> not advisable
+#3 -> to be used from command line 
 def add_csv_values(name):
     name=sys.argv[3]
     price=sys.argv[5]
@@ -179,7 +179,7 @@ def add_csv_values(name):
             
             
 #print(add_csv_values('orange'))
-#3-> to be used on back end
+#3-> to be used on back end if there is a created class object.
 def add_csv_values_internal(product):
     if os.getcwd() != folder_path:
         os.chdir(folder_path)
